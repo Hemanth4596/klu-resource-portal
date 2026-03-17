@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body style="background:#0B0F1A;color:white;text-align:center;">
+<h2>Dashboard</h2>
+<div id="list"></div>
+
+<script>
+const user=JSON.parse(localStorage.getItem("user"));
+
+fetch("https://your-app.onrender.com/resources/"+user.branch)
+.then(r=>r.json())
+.then(data=>{
+data.forEach(x=>{
+document.getElementById("list").innerHTML+=
+`<p><a href="${x.link}" style="color:cyan">${x.title}</a></p>`;
+});
+});
+</script>
+</body>
+</html>
