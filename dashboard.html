@@ -1,20 +1,234 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#0B0F1A;color:white;text-align:center;">
-<h2>Dashboard</h2>
-<div id="list"></div>
+<head>
+<title>Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+body {
+  margin:0;
+  font-family:Arial;
+  background:#0B0F1A;
+  color:white;
+  overflow-x:hidden;
+}
+
+/* PARTICLE BACKGROUND */
+canvas {
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:-1;
+}
+
+/* NAV */
+.nav {
+  display:flex;
+  justify-content:space-between;
+  padding:15px 30px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+}
+
+.logo { font-weight:bold; }
+.logout { color:#ff4d4d; cursor:pointer; }
+
+/* HERO */
+.hero {
+  text-align:center;
+  margin-top:40px;
+}
+
+.hero h1 {
+  font-size:30px;
+  animation:glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow:0 0 10px cyan; }
+  to { text-shadow:0 0 25px cyan; }
+}
+
+/* GRID */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+  padding:30px;
+}
+
+/* GLASS CARD */
+.card {
+  background:rgba(255,255,255,0.05);
+  border-radius:15px;
+  padding:20px;
+  backdrop-filter:blur(15px);
+  transition:0.3s;
+  position:relative;
+  overflow:hidden;
+}
+
+.card:hover {
+  transform:translateY(-8px) scale(1.05);
+  box-shadow:0 0 25px rgba(0,255,255,0.3);
+}
+
+/* GLOW BORDER */
+.card::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:15px;
+  padding:1px;
+  background:linear-gradient(45deg,cyan,transparent,cyan);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+}
+
+/* LINKS */
+.resources a {
+  display:block;
+  color:cyan;
+  margin-top:6px;
+  text-decoration:none;
+  font-size:14px;
+}
+
+.resources a:hover {
+  text-decoration:underline;
+}
+
+/* LOADING */
+.loader {
+  text-align:center;
+  margin-top:50px;
+  font-size:18px;
+  animation:pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%{opacity:0.3}
+  50%{opacity:1}
+  100%{opacity:0.3}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="nav">
+  <div class="logo">KLU Resources</div>
+  <div class="logout" onclick="logout()">Logout</div>
+</div>
+
+<div class="hero">
+  <h1 id="welcome"></h1>
+  <p>Explore resources with style ⚡</p>
+</div>
+
+<div id="loader" class="loader">Loading resources...</div>
+
+<div class="grid" id="grid" style="display:none;"></div>
 
 <script>
-const user=JSON.parse(localStorage.getItem("user"));
 
-fetch("https://your-app.onrender.com/resources/"+user.branch)
-.then(r=>r.json())
-.then(data=>{
-data.forEach(x=>{
-document.getElementById("list").innerHTML+=
-`<p><a href="${x.link}" style="color:cyan">${x.title}</a></p>`;
+// SUPABASE
+const { createClient } = supabase;
+
+const client = createClient(
+  "https://jkgkswsiunpzwnurqvjq.supabase.co",
+  "sb_publishable_khKSlOrpjH8f44Z5Dls3mw_QfpSthr8"
+);
+
+const user = JSON.parse(localStorage.getItem("user"));
+
+if(!user){
+  window.location="index.html";
+}
+
+document.getElementById("welcome").innerText =
+  "Welcome " + user.id_no;
+
+// PARTICLE BACKGROUND
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+
+for(let i=0;i<80;i++){
+  particles.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*2,
+    dx:Math.random()-0.5,
+    dy:Math.random()-0.5
+  });
+}
+
+function animate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  particles.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle="cyan";
+    ctx.fill();
+
+    p.x+=p.dx;
+    p.y+=p.dy;
+
+    if(p.x<0||p.x>canvas.width) p.dx*=-1;
+    if(p.y<0||p.y>canvas.height) p.dy*=-1;
+  });
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+// GRID
+const branches = ["CSE","ECE","EEE","AIDS","CSIT"];
+const grid = document.getElementById("grid");
+
+branches.forEach(b=>{
+  const card = document.createElement("div");
+  card.className="card";
+  card.innerHTML = `<h3>${b}</h3><div id="${b}" class="resources"></div>`;
+  grid.appendChild(card);
 });
-});
+
+// LOAD DATA
+async function load(){
+  const { data } = await client.from("resources").select("*");
+
+  data.forEach(item=>{
+    const el = document.getElementById(item.branch);
+    if(el){
+      el.innerHTML += `<a href="${item.link}" target="_blank">${item.title}</a>`;
+    }
+  });
+
+  document.getElementById("loader").style.display="none";
+  grid.style.display="grid";
+}
+
+load();
+
+// LOGOUT
+function logout(){
+  localStorage.removeItem("user");
+  window.location="index.html";
+}
+
 </script>
+
 </body>
 </html>
