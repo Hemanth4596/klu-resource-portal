@@ -4,6 +4,7 @@
 <title>KLU Admin Panel</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
 body{
@@ -34,6 +35,11 @@ body{
   cursor:pointer;
   background:rgba(255,255,255,0.05);
   border-radius:8px;
+  transition:0.3s;
+}
+
+.tab:hover{
+  transform:scale(1.05);
 }
 
 .tab.active{
@@ -45,7 +51,7 @@ body{
 .section{
   display:none;
   padding:20px;
-  max-width:650px;
+  max-width:700px;
   margin:auto;
 }
 
@@ -54,25 +60,59 @@ body{
 }
 
 /* INPUTS */
-input,select,button{
+input,select{
   width:100%;
   padding:10px;
   margin-top:10px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid transparent;
+  color:white;
+  border-radius:8px;
+}
+
+input:focus,select:focus{
+  outline:none;
+  border:1px solid cyan;
+  box-shadow:0 0 8px cyan;
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:linear-gradient(45deg,cyan,#00ffaa);
+  border:none;
+  border-radius:8px;
+  color:black;
+  font-weight:bold;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 10px cyan;
 }
 
 /* CARD */
 .item{
   background:rgba(255,255,255,0.05);
-  padding:10px;
+  padding:12px;
   margin-top:10px;
   border-radius:10px;
+  transition:0.3s;
+}
+
+.item:hover{
+  transform:translateY(-3px);
+  box-shadow:0 0 15px rgba(0,255,255,0.3);
 }
 </style>
 </head>
 
 <body>
 
-<div class="nav">Admin Panel</div>
+<div class="nav">⚡ KLU Admin Panel</div>
 
 <div class="tabs">
   <div class="tab active" onclick="openTab('stats')">Stats</div>
@@ -83,25 +123,27 @@ input,select,button{
 
 <!-- STATS -->
 <div id="stats" class="section active">
-  <h3>Statistics</h3>
+  <h3><i class="fa fa-chart-bar"></i> Statistics</h3>
   <p>Total Users: <span id="userCount"></span></p>
   <p>Total Resources: <span id="resCount"></span></p>
 </div>
 
 <!-- USERS -->
 <div id="users" class="section">
-  <h3>Pending Users</h3>
+  <h3><i class="fa fa-users"></i> User Management</h3>
+
+  <input id="userSearch" placeholder="Search users..." oninput="loadUsers()">
+
   <div id="userList"></div>
 </div>
 
 <!-- RESOURCES -->
 <div id="resources" class="section">
 
-  <h3>Add / Upload Resource</h3>
+  <h3><i class="fa fa-upload"></i> Upload Resource</h3>
 
   <input id="title" placeholder="Title">
   <input id="link" placeholder="Optional Link">
-
   <input type="file" id="file">
 
   <select id="branch">
@@ -114,7 +156,6 @@ input,select,button{
 
   <button onclick="add()">Upload</button>
 
-  <h3>Search</h3>
   <input id="search" placeholder="Search..." oninput="loadResources()">
 
   <div id="resList"></div>
@@ -123,7 +164,7 @@ input,select,button{
 
 <!-- ACTIVE USERS -->
 <div id="active" class="section">
-  <h3>Active Users</h3>
+  <h3>🟢 Active Users</h3>
   <div id="activeList"></div>
 </div>
 
@@ -136,7 +177,7 @@ const client = createClient(
   "sb_publishable_khKSlOrpjH8f44Z5Dls3mw_QfpSthr8"
 );
 
-// 🔐 ACCESS CONTROL
+// ACCESS CONTROL
 const user = JSON.parse(localStorage.getItem("user"));
 
 if(!user || (user.role !== "admin" && user.role !== "coadmin")){
@@ -163,34 +204,59 @@ async function loadStats(){
 
 // USERS
 async function loadUsers(){
+  const { data } = await client.from("users").select("*");
 
-  const { data } = await client
-    .from("users")
-    .select("*")
-    .eq("status","pending");
+  const search = userSearch.value.toLowerCase();
 
   userList.innerHTML="";
 
   data.forEach(u=>{
-    userList.innerHTML += `
-      <div class="item">
-        ${u.id_no} (${u.branch})
-        <button onclick="approve('${u.id_no}')">Approve</button>
-      </div>
-    `;
+    if(u.id_no.toLowerCase().includes(search)){
+      userList.innerHTML += `
+        <div class="item">
+          <b>${u.id_no}</b> (${u.branch})<br>
+          Role: ${u.role} | Status: ${u.status}<br>
+
+          ${u.status === "pending" ? 
+            `<button onclick="approve('${u.id_no}')">Approve</button>` : ""}
+
+          <button onclick="blockUser('${u.id_no}')">Block</button>
+          <button onclick="unblockUser('${u.id_no}')">Unblock</button>
+
+          ${u.role !== "admin" ? 
+            `<button onclick="removeUser('${u.id_no}')">Delete</button>` : ""}
+        </div>
+      `;
+    }
   });
 }
 
 // APPROVE
 async function approve(id){
-  await client.from("users")
-    .update({status:"approved"})
-    .eq("id_no",id);
-
+  await client.from("users").update({status:"approved"}).eq("id_no",id);
   loadUsers();
 }
 
-// ADD RESOURCE (LINK + FILE)
+// BLOCK
+async function blockUser(id){
+  await client.from("users").update({status:"blocked"}).eq("id_no",id);
+  loadUsers();
+}
+
+// UNBLOCK
+async function unblockUser(id){
+  await client.from("users").update({status:"approved"}).eq("id_no",id);
+  loadUsers();
+}
+
+// DELETE USER
+async function removeUser(id){
+  if(!confirm("Delete user permanently?")) return;
+  await client.from("users").delete().eq("id_no",id);
+  loadUsers();
+}
+
+// ADD RESOURCE
 async function add(){
 
   if(!title.value){
@@ -202,7 +268,6 @@ async function add(){
 
   const fileInput = document.getElementById("file");
 
-  // FILE UPLOAD
   if(fileInput.files.length > 0){
 
     const file = fileInput.files[0];
@@ -214,15 +279,11 @@ async function add(){
       .upload(fileName, file);
 
     if(error){
-      alert("File upload failed");
+      alert("Upload failed");
       return;
     }
 
-    const { data } = client
-      .storage
-      .from("files")
-      .getPublicUrl(fileName);
-
+    const { data } = client.storage.from("files").getPublicUrl(fileName);
     fileUrl = data.publicUrl;
   }
 
@@ -244,7 +305,7 @@ async function add(){
   loadResources();
 }
 
-// DELETE
+// DELETE RESOURCE
 async function del(id){
   await client.from("resources").delete().eq("id",id);
   loadResources();
@@ -263,9 +324,7 @@ async function loadResources(){
   resList.innerHTML="";
 
   data.forEach(r=>{
-
     if(r.title.toLowerCase().includes(s)){
-
       resList.innerHTML += `
         <div class="item">
           <b>${r.title}</b> (${r.branch})<br>
@@ -274,7 +333,6 @@ async function loadResources(){
         </div>
       `;
     }
-
   });
 }
 
@@ -289,9 +347,7 @@ async function loadActive(){
 
   data.forEach(u=>{
     if(u.last_active){
-
       const diff = (now - new Date(u.last_active))/1000;
-
       if(diff < 10){
         activeList.innerHTML += `<div class="item">${u.id_no} 🟢</div>`;
       }
