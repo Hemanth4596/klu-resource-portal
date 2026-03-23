@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KL Study Hub</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+/* ---------------- CSS ARCHITECTURE ---------------- */
+
 /* ANIMATED BACKGROUND */
 body {
   margin: 0;
@@ -165,13 +169,96 @@ button:active {
   line-height: 1.5;
 }
 
-/* Custom Scrollbar for Terms */
 .terms::-webkit-scrollbar { width: 6px; }
 .terms::-webkit-scrollbar-track { background: transparent; }
 .terms::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 3px; }
 .terms::-webkit-scrollbar-thumb:hover { background: cyan; }
 
 .hidden { display: none !important; }
+
+/* ---------------- TOAST NOTIFICATION SYSTEM ---------------- */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+}
+
+.toast {
+  background: rgba(11, 15, 26, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid;
+  color: white;
+  padding: 16px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  min-width: 260px;
+  position: relative;
+  overflow: hidden;
+  animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.toast.hiding {
+  animation: slideOutRight 0.4s ease-in forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(120%); opacity: 0; }
+}
+
+.toast.success { border-left-color: cyan; }
+.toast.success .toast-icon { background: rgba(0, 255, 255, 0.15); color: cyan; }
+.toast.success .toast-progress { background: cyan; }
+
+.toast.error { border-left-color: #ff4444; }
+.toast.error .toast-icon { background: rgba(255, 68, 68, 0.15); color: #ff4444; }
+.toast.error .toast-progress { background: #ff4444; }
+
+.toast-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.toast-message {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation: progressShrink 3s linear forwards;
+}
+
+@keyframes progressShrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
 </style>
 </head>
 
@@ -179,146 +266,185 @@ button:active {
 
 <div class="card">
 
-<div class="title">
-KL <span style="color:cyan;">STUDY HUB</span>
-</div>
+  <div class="title">
+    KL <span style="color:cyan;">STUDY HUB</span>
+  </div>
 
-<div id="loginBox">
-<h3>Login</h3>
+  <div id="loginBox">
+    <h3>Login</h3>
+    <input id="id" placeholder="Student ID">
+    <input id="pass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <span class="link" onclick="openSignup()">Create Account</span>
+  </div>
 
-<input id="id" placeholder="Student ID">
-<input id="pass" type="password" placeholder="Password">
+  <div id="signupBox" class="hidden">
+    <h3>Terms & Conditions</h3>
+    <div class="terms">
+      <b>KL Study Hub – Terms & Conditions</b><br><br>
+      Only valid students with approved IDs are allowed.<br><br>
+      Users must keep login credentials secure. Sharing credentials is discouraged. While we store data securely, misuse due to shared credentials is the user’s responsibility.<br><br>
+      Do not upload harmful, illegal, or copyrighted content.<br><br>
+      Admins can approve, reject, or remove users and resources.<br><br>
+      Platform is provided “as is” for academic use.<br><br>
+      By continuing, you agree to all terms.
+    </div>
+    <label style="display:block;margin-top:10px;font-size:14px;cursor:pointer;">
+      <input type="checkbox" id="agree" style="width:auto;transform:none;margin-right:8px;"> I Agree to Terms
+    </label>
+    <button onclick="next()">Continue</button>
+    <span class="link" onclick="backToLogin()">Back</span>
+  </div>
 
-<button onclick="login()">Login</button>
-
-<span class="link" onclick="openSignup()">Create Account</span>
-</div>
-
-<div id="signupBox" class="hidden">
-<h3>Terms & Conditions</h3>
-
-<div class="terms">
-<b>KL Study Hub – Terms & Conditions</b><br><br>
-
-Only valid students with approved IDs are allowed.<br><br>
-
-Users must keep login credentials secure. Sharing credentials is discouraged. While we store data securely, misuse due to shared credentials is the user’s responsibility.<br><br>
-
-Do not upload harmful, illegal, or copyrighted content.<br><br>
-
-Admins can approve, reject, or remove users and resources.<br><br>
-
-Platform is provided “as is” for academic use.<br><br>
-
-By continuing, you agree to all terms.
-</div>
-
-<label style="display:block;margin-top:10px;font-size:14px;cursor:pointer;">
-<input type="checkbox" id="agree" style="width:auto;transform:none;margin-right:8px;"> I Agree to Terms
-</label>
-
-<button onclick="next()">Continue</button>
-
-<span class="link" onclick="backToLogin()">Back</span>
-</div>
-
-<div id="formBox" class="hidden">
-<h3>Create Account</h3>
-
-<input id="sid" placeholder="Student ID">
-<input id="spass" type="password" placeholder="Password">
-
-<select id="branch">
-<option>CSE</option>
-<option>ECE</option>
-<option>EEE</option>
-<option>AIDS</option>
-<option>CSIT</option>
-</select>
-
-<button onclick="signup()">Signup</button>
-
-<span class="link" onclick="backToLogin()">Back</span>
-</div>
+  <div id="formBox" class="hidden">
+    <h3>Create Account</h3>
+    <input id="sid" placeholder="Student ID">
+    <input id="spass" type="password" placeholder="Password">
+    <select id="branch">
+      <option>CSE</option>
+      <option>ECE</option>
+      <option>EEE</option>
+      <option>AIDS</option>
+      <option>CSIT</option>
+    </select>
+    <button onclick="signup()">Signup</button>
+    <span class="link" onclick="backToLogin()">Back</span>
+  </div>
 
 </div>
 
 <script>
-
+// ---------------- SUPABASE CONFIGURATION ----------------
 const { createClient } = supabase;
-
 const client = createClient(
   "https://jkgkswsiunpzwnurqvjq.supabase.co",
   "sb_publishable_khKSlOrpjH8f44Z5Dls3mw_QfpSthr8"
 );
 
-// OPEN SIGNUP
+// ---------------- DOM ELEMENTS & NAVIGATION ----------------
+const loginBox = document.getElementById("loginBox");
+const signupBox = document.getElementById("signupBox");
+const formBox = document.getElementById("formBox");
+
+const idInput = document.getElementById("id");
+const passInput = document.getElementById("pass");
+const sidInput = document.getElementById("sid");
+const spassInput = document.getElementById("spass");
+const branchSelect = document.getElementById("branch");
+const agreeCheckbox = document.getElementById("agree");
+
 function openSignup(){
   loginBox.classList.add("hidden");
   signupBox.classList.remove("hidden");
 }
 
-// BACK
 function backToLogin(){
   signupBox.classList.add("hidden");
   formBox.classList.add("hidden");
   loginBox.classList.remove("hidden");
 }
 
-// NEXT
 function next(){
-  if(!agree.checked){
-    alert("Please agree to terms");
+  if(!agreeCheckbox.checked){
+    showToast("Please agree to the terms and conditions.", "error");
     return;
   }
   signupBox.classList.add("hidden");
   formBox.classList.remove("hidden");
 }
 
-// SIGNUP
-async function signup(){
+// ---------------- DYNAMIC TOAST GENERATOR ----------------
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
 
-  await client.from("users").insert([{
-    id_no: sid.value,
-    password: spass.value,
-    branch: branch.value,
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icon = type === 'success' ? '✓' : '✕';
+
+  toast.innerHTML = `
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-message">${message}</div>
+    <div class="toast-progress"></div>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    toast.addEventListener('animationend', () => {
+      toast.remove();
+    });
+  }, 3000); 
+}
+
+// ---------------- AUTHENTICATION LOGIC ----------------
+async function signup(){
+  if(!sidInput.value || !spassInput.value) {
+    showToast("Please fill in all fields.", "error");
+    return;
+  }
+
+  const { error } = await client.from("users").insert([{
+    id_no: sidInput.value,
+    password: spassInput.value,
+    branch: branchSelect.value,
     role: "user",
     status: "pending"
   }]);
 
-  alert("Request sent. Wait for approval.");
-  location.reload();
+  if (error) {
+    showToast("Error creating account. Please try again.", "error");
+    console.error(error);
+    return;
+  }
+
+  showToast("Account request sent. Wait for admin approval.", "success");
+  
+  sidInput.value = "";
+  spassInput.value = "";
+  agreeCheckbox.checked = false;
+  setTimeout(() => backToLogin(), 1500);
 }
 
-// LOGIN
 async function login(){
+  if(!idInput.value || !passInput.value) {
+    showToast("Please enter your Student ID and Password.", "error");
+    return;
+  }
 
-  const { data } = await client
+  const { data, error } = await client
     .from("users")
     .select("*")
-    .eq("id_no", id.value)
-    .eq("password", pass.value)
+    .eq("id_no", idInput.value)
+    .eq("password", passInput.value)
     .single();
 
-  if(!data){
-    alert("Invalid credentials");
+  if(error || !data){
+    showToast("Invalid Student ID or Password.", "error");
     return;
   }
 
   if(data.status !== "approved"){
-    alert("Not approved yet");
+    showToast("Your account has not been approved yet.", "error");
     return;
   }
 
+  showToast("Login successful. Redirecting...", "success");
   localStorage.setItem("user", JSON.stringify(data));
 
-  if(data.role === "admin"){
-    window.location = "admin.html";
-  } else {
-    window.location = "dashboard.html";
-  }
+  setTimeout(() => {
+    if(data.role === "admin" || data.role === "coadmin"){
+      window.location = "admin.html";
+    } else {
+      window.location = "dashboard.html";
+    }
+  }, 1000);
 }
-
 </script>
 
 </body>
