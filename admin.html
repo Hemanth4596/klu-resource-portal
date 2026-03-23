@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin Panel</title>
+<title>KLU Admin Panel</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-body {
+body{
   margin:0;
   font-family:Arial;
   background:#0B0F1A;
@@ -14,57 +14,58 @@ body {
 }
 
 /* NAV */
-.nav {
-  padding:15px;
+.nav{
   text-align:center;
+  padding:15px;
   background:rgba(255,255,255,0.05);
   font-size:18px;
 }
 
 /* TABS */
-.tabs {
+.tabs{
   display:flex;
   justify-content:center;
   gap:10px;
   margin-top:20px;
 }
 
-.tab {
+.tab{
   padding:10px 20px;
-  background:rgba(255,255,255,0.05);
   cursor:pointer;
+  background:rgba(255,255,255,0.05);
   border-radius:8px;
 }
 
-.tab.active {
+.tab.active{
   background:cyan;
   color:black;
 }
 
 /* SECTION */
-.section {
+.section{
   display:none;
   padding:20px;
-  max-width:600px;
+  max-width:650px;
   margin:auto;
 }
 
-.section.active {
+.section.active{
   display:block;
 }
 
 /* INPUTS */
-input, select, button {
+input,select,button{
   width:100%;
   padding:10px;
   margin-top:10px;
 }
 
-.item {
+/* CARD */
+.item{
   background:rgba(255,255,255,0.05);
   padding:10px;
   margin-top:10px;
-  border-radius:8px;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -77,6 +78,7 @@ input, select, button {
   <div class="tab active" onclick="openTab('stats')">Stats</div>
   <div class="tab" onclick="openTab('users')">Users</div>
   <div class="tab" onclick="openTab('resources')">Resources</div>
+  <div class="tab" onclick="openTab('active')">Active</div>
 </div>
 
 <!-- STATS -->
@@ -95,10 +97,12 @@ input, select, button {
 <!-- RESOURCES -->
 <div id="resources" class="section">
 
-  <h3>Add Resource</h3>
+  <h3>Add / Upload Resource</h3>
 
   <input id="title" placeholder="Title">
-  <input id="link" placeholder="Link">
+  <input id="link" placeholder="Optional Link">
+
+  <input type="file" id="file">
 
   <select id="branch">
     <option>CSE</option>
@@ -110,11 +114,17 @@ input, select, button {
 
   <button onclick="add()">Upload</button>
 
-  <h3>All Resources</h3>
+  <h3>Search</h3>
   <input id="search" placeholder="Search..." oninput="loadResources()">
 
   <div id="resList"></div>
 
+</div>
+
+<!-- ACTIVE USERS -->
+<div id="active" class="section">
+  <h3>Active Users</h3>
+  <div id="activeList"></div>
 </div>
 
 <script>
@@ -126,7 +136,14 @@ const client = createClient(
   "sb_publishable_khKSlOrpjH8f44Z5Dls3mw_QfpSthr8"
 );
 
-// TAB SWITCH
+// 🔐 ACCESS CONTROL
+const user = JSON.parse(localStorage.getItem("user"));
+
+if(!user || (user.role !== "admin" && user.role !== "coadmin")){
+  window.location="index.html";
+}
+
+// TABS
 function openTab(name){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
@@ -135,16 +152,16 @@ function openTab(name){
   document.getElementById(name).classList.add("active");
 }
 
-// LOAD STATS
+// STATS
 async function loadStats(){
   const users = await client.from("users").select("*");
   const res = await client.from("resources").select("*");
 
-  document.getElementById("userCount").innerText = users.data.length;
-  document.getElementById("resCount").innerText = res.data.length;
+  userCount.innerText = users.data.length;
+  resCount.innerText = res.data.length;
 }
 
-// LOAD USERS
+// USERS
 async function loadUsers(){
 
   const { data } = await client
@@ -152,11 +169,10 @@ async function loadUsers(){
     .select("*")
     .eq("status","pending");
 
-  const list = document.getElementById("userList");
-  list.innerHTML="";
+  userList.innerHTML="";
 
   data.forEach(u=>{
-    list.innerHTML += `
+    userList.innerHTML += `
       <div class="item">
         ${u.id_no} (${u.branch})
         <button onclick="approve('${u.id_no}')">Approve</button>
@@ -174,35 +190,83 @@ async function approve(id){
   loadUsers();
 }
 
-// ADD RESOURCE
+// ADD RESOURCE (LINK + FILE)
 async function add(){
+
+  if(!title.value){
+    alert("Enter title");
+    return;
+  }
+
+  let fileUrl = link.value;
+
+  const fileInput = document.getElementById("file");
+
+  // FILE UPLOAD
+  if(fileInput.files.length > 0){
+
+    const file = fileInput.files[0];
+    const fileName = Date.now() + "_" + file.name;
+
+    const { error } = await client
+      .storage
+      .from("files")
+      .upload(fileName, file);
+
+    if(error){
+      alert("File upload failed");
+      return;
+    }
+
+    const { data } = client
+      .storage
+      .from("files")
+      .getPublicUrl(fileName);
+
+    fileUrl = data.publicUrl;
+  }
+
+  if(!fileUrl){
+    alert("Provide link or file");
+    return;
+  }
 
   await client.from("resources").insert([{
     title: title.value,
-    link: link.value,
+    link: fileUrl,
     branch: branch.value
   }]);
 
   title.value="";
   link.value="";
+  fileInput.value="";
+
+  loadResources();
+}
+
+// DELETE
+async function del(id){
+  await client.from("resources").delete().eq("id",id);
   loadResources();
 }
 
 // LOAD RESOURCES
 async function loadResources(){
 
-  const { data } = await client.from("resources").select("*");
+  const { data } = await client
+    .from("resources")
+    .select("*")
+    .order("created_at",{ascending:false});
 
-  const search = document.getElementById("search").value.toLowerCase();
+  const s = search.value.toLowerCase();
 
-  const list = document.getElementById("resList");
-  list.innerHTML="";
+  resList.innerHTML="";
 
   data.forEach(r=>{
 
-    if(r.title.toLowerCase().includes(search)){
+    if(r.title.toLowerCase().includes(s)){
 
-      list.innerHTML += `
+      resList.innerHTML += `
         <div class="item">
           <b>${r.title}</b> (${r.branch})<br>
           <a href="${r.link}" target="_blank">Open</a><br>
@@ -214,16 +278,32 @@ async function loadResources(){
   });
 }
 
-// DELETE
-async function del(id){
-  await client.from("resources").delete().eq("id",id);
-  loadResources();
+// ACTIVE USERS
+async function loadActive(){
+
+  const now = new Date();
+
+  const { data } = await client.from("users").select("*");
+
+  activeList.innerHTML="";
+
+  data.forEach(u=>{
+    if(u.last_active){
+
+      const diff = (now - new Date(u.last_active))/1000;
+
+      if(diff < 10){
+        activeList.innerHTML += `<div class="item">${u.id_no} 🟢</div>`;
+      }
+    }
+  });
 }
 
 // INIT
 loadStats();
 loadUsers();
 loadResources();
+setInterval(loadActive,5000);
 
 </script>
 
