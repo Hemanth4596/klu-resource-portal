@@ -6,88 +6,172 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#0B0F1A,#111827);
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+/* ANIMATED BACKGROUND */
+body {
+  margin: 0;
+  font-family: 'Inter', Arial, sans-serif;
+  background: linear-gradient(-45deg, #0B0F1A, #111827, #0f2027, #203a43);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
 }
 
-/* CARD */
-.card{
-  width:360px;
-  padding:25px;
-  background:rgba(255,255,255,0.05);
-  border-radius:15px;
-  backdrop-filter:blur(15px);
-  box-shadow:0 0 25px rgba(0,255,255,0.1);
-  text-align:center;
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* AMBIENT GLOW EFFECT */
+body::before {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: cyan;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.15;
+  animation: floatAmbient 8s infinite alternate ease-in-out;
+  z-index: 0;
+}
+
+@keyframes floatAmbient {
+  0% { transform: translate(-100px, -100px) scale(0.8); }
+  100% { transform: translate(100px, 100px) scale(1.2); }
+}
+
+/* CARD WITH 3D ENTRANCE */
+.card {
+  position: relative;
+  z-index: 1;
+  width: 360px;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 15px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(0, 255, 255, 0.1);
+  text-align: center;
+  animation: cardEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(40px) scale(0.9) rotateX(-10deg); }
+  to { opacity: 1; transform: translateY(0) scale(1) rotateX(0); }
 }
 
 /* TITLE */
-.title{
-  font-size:22px;
-  font-weight:bold;
-  margin-bottom:15px;
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+/* SECTION TRANSITIONS */
+#loginBox, #signupBox, #formBox {
+  animation: slideFadeIn 0.4s ease-out forwards;
+}
+
+@keyframes slideFadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 /* INPUTS */
-input,select{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
-  border:none;
-  background:rgba(255,255,255,0.05);
-  color:white;
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  box-sizing: border-box;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-input:focus{
-  outline:none;
-  border:1px solid cyan;
+input:focus, select:focus {
+  outline: none;
+  border-color: cyan;
+  background: rgba(0, 255, 255, 0.05);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
 }
 
-/* BUTTON */
-button{
-  width:100%;
-  padding:10px;
-  margin-top:12px;
-  border:none;
-  border-radius:8px;
-  background:linear-gradient(45deg,cyan,#00ffaa);
-  font-weight:bold;
-  cursor:pointer;
+/* BUTTONS */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(45deg, cyan, #00ffaa);
+  color: #000;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
 }
 
-button:hover{
-  opacity:0.9;
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 255, 0.4);
+  filter: brightness(1.1);
+}
+
+button:active {
+  transform: translateY(1px) scale(0.98);
 }
 
 /* LINKS */
-.link{
-  color:cyan;
-  cursor:pointer;
-  margin-top:10px;
-  display:block;
+.link {
+  color: cyan;
+  cursor: pointer;
+  margin-top: 15px;
+  display: inline-block;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.link:hover {
+  opacity: 1;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
 /* TERMS BOX */
-.terms{
-  height:150px;
-  overflow:auto;
-  font-size:12px;
-  text-align:left;
-  background:rgba(255,255,255,0.03);
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
+.terms {
+  height: 150px;
+  overflow-y: auto;
+  font-size: 12px;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  line-height: 1.5;
 }
 
-.hidden{display:none;}
+/* Custom Scrollbar for Terms */
+.terms::-webkit-scrollbar { width: 6px; }
+.terms::-webkit-scrollbar-track { background: transparent; }
+.terms::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 3px; }
+.terms::-webkit-scrollbar-thumb:hover { background: cyan; }
+
+.hidden { display: none !important; }
 </style>
 </head>
 
@@ -99,7 +183,6 @@ button:hover{
 KL <span style="color:cyan;">STUDY HUB</span>
 </div>
 
-<!-- LOGIN -->
 <div id="loginBox">
 <h3>Login</h3>
 
@@ -111,7 +194,6 @@ KL <span style="color:cyan;">STUDY HUB</span>
 <span class="link" onclick="openSignup()">Create Account</span>
 </div>
 
-<!-- TERMS -->
 <div id="signupBox" class="hidden">
 <h3>Terms & Conditions</h3>
 
@@ -131,8 +213,8 @@ Platform is provided “as is” for academic use.<br><br>
 By continuing, you agree to all terms.
 </div>
 
-<label style="display:block;margin-top:10px;">
-<input type="checkbox" id="agree"> I Agree to Terms
+<label style="display:block;margin-top:10px;font-size:14px;cursor:pointer;">
+<input type="checkbox" id="agree" style="width:auto;transform:none;margin-right:8px;"> I Agree to Terms
 </label>
 
 <button onclick="next()">Continue</button>
@@ -140,7 +222,6 @@ By continuing, you agree to all terms.
 <span class="link" onclick="backToLogin()">Back</span>
 </div>
 
-<!-- SIGNUP -->
 <div id="formBox" class="hidden">
 <h3>Create Account</h3>
 
