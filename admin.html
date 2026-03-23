@@ -7,87 +7,35 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0B0F1A;
-  color:white;
-}
+body{margin:0;font-family:Arial;background:#0B0F1A;color:white;}
 
-.nav{
-  text-align:center;
-  padding:15px;
-  background:rgba(255,255,255,0.05);
-}
+.nav{text-align:center;padding:15px;background:rgba(255,255,255,0.05);}
 
-.tabs{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-top:20px;
-}
+.tabs{display:flex;justify-content:center;gap:10px;margin-top:20px;}
 
-.tab{
-  padding:10px 20px;
-  cursor:pointer;
-  background:rgba(255,255,255,0.05);
-  border-radius:8px;
-}
+.tab{padding:10px 20px;cursor:pointer;background:rgba(255,255,255,0.05);border-radius:8px;}
+.tab.active{background:cyan;color:black;}
 
-.tab.active{
-  background:cyan;
-  color:black;
-}
-
-.section{
-  display:none;
-  padding:20px;
-  max-width:700px;
-  margin:auto;
-}
-
-.section.active{
-  display:block;
-}
+.section{display:none;padding:20px;max-width:750px;margin:auto;}
+.section.active{display:block;}
 
 input,select{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
+  width:100%;padding:10px;margin-top:10px;
   background:rgba(255,255,255,0.05);
-  border:1px solid transparent;
-  color:white;
-  border-radius:8px;
-}
-
-input:focus{
-  outline:none;
-  border:1px solid cyan;
+  color:white;border-radius:8px;border:none;
 }
 
 button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
+  width:100%;padding:10px;margin-top:10px;
   background:linear-gradient(45deg,cyan,#00ffaa);
-  border:none;
-  border-radius:8px;
-  color:black;
-  font-weight:bold;
+  border:none;border-radius:8px;font-weight:bold;
 }
 
 .item{
   background:rgba(255,255,255,0.05);
-  padding:12px;
-  margin-top:10px;
-  border-radius:10px;
+  padding:12px;margin-top:10px;border-radius:10px;
 }
-
-/* COUNT BADGES */
-.count{
-  color:cyan;
-  font-size:14px;
-}
+.count{color:cyan;font-size:14px;}
 </style>
 </head>
 
@@ -96,66 +44,61 @@ button{
 <div class="nav">⚡ KLU Admin Panel</div>
 
 <div class="tabs">
-  <div class="tab active" onclick="openTab('stats')">Stats</div>
-  <div class="tab" onclick="openTab('users')">Users</div>
+  <div class="tab active" onclick="openTab('users')">Users</div>
   <div class="tab" onclick="openTab('resources')">Resources</div>
-  <div class="tab" onclick="openTab('active')">Active</div>
-</div>
-
-<!-- STATS -->
-<div id="stats" class="section active">
-  <h3><i class="fa fa-chart-bar"></i> Statistics</h3>
-  <p>Total Users: <span id="userCount"></span></p>
-  <p>Total Resources: <span id="resCount"></span></p>
 </div>
 
 <!-- USERS -->
-<div id="users" class="section">
+<div id="users" class="section active">
 
-  <h3><i class="fa fa-users"></i> User Management</h3>
+<h3><i class="fa fa-users"></i> User Management</h3>
 
-  <input id="userSearch" placeholder="Search users..." oninput="loadUsers()">
+<input id="userSearch" placeholder="Search..." oninput="loadUsers()">
 
-  <h4>🟡 Pending <span class="count" id="pendingCount"></span></h4>
-  <div id="pendingList"></div>
+<!-- SELECT ALL -->
+<label>
+  <input type="checkbox" onclick="toggleAll(this)"> Select All
+</label>
 
-  <h4>🟢 Approved <span class="count" id="approvedCount"></span></h4>
-  <div id="approvedList"></div>
+<!-- BULK ACTIONS -->
+<button onclick="approveSelected()">Approve Selected</button>
+<button onclick="blockSelected()">Block Selected</button>
+<button onclick="deleteSelected()">Delete Selected</button>
 
-  <h4>🔴 Blocked <span class="count" id="blockedCount"></span></h4>
-  <div id="blockedList"></div>
+<h4>🟡 Pending <span id="pendingCount" class="count"></span></h4>
+<div id="pendingList"></div>
+
+<h4>🟢 Approved <span id="approvedCount" class="count"></span></h4>
+<div id="approvedList"></div>
+
+<h4>🔴 Blocked <span id="blockedCount" class="count"></span></h4>
+<div id="blockedList"></div>
 
 </div>
 
 <!-- RESOURCES -->
 <div id="resources" class="section">
 
-  <h3><i class="fa fa-upload"></i> Upload Resource</h3>
+<h3><i class="fa fa-upload"></i> Upload Resource</h3>
 
-  <input id="title" placeholder="Title">
-  <input id="link" placeholder="Optional Link">
-  <input type="file" id="file">
+<input id="title" placeholder="Title">
+<input id="link" placeholder="Optional Link">
+<input type="file" id="file">
 
-  <select id="branch">
-    <option>CSE</option>
-    <option>ECE</option>
-    <option>EEE</option>
-    <option>AIDS</option>
-    <option>CSIT</option>
-  </select>
+<select id="branch">
+<option>CSE</option>
+<option>ECE</option>
+<option>EEE</option>
+<option>AIDS</option>
+<option>CSIT</option>
+</select>
 
-  <button onclick="add()">Upload</button>
+<button onclick="add()">Upload</button>
 
-  <input id="search" placeholder="Search..." oninput="loadResources()">
+<input id="search" placeholder="Search..." oninput="loadResources()">
 
-  <div id="resList"></div>
+<div id="resList"></div>
 
-</div>
-
-<!-- ACTIVE -->
-<div id="active" class="section">
-  <h3>🟢 Active Users</h3>
-  <div id="activeList"></div>
 </div>
 
 <script>
@@ -163,18 +106,17 @@ button{
 const { createClient } = supabase;
 
 const client = createClient(
-  "https://jkgkswsiunpzwnurqvjq.supabase.co",
-  "sb_publishable_khKSlOrpjH8f44Z5Dls3mw_QfpSthr8"
+"https://jkgkswsiunpzwnurqvjq.supabase.co",
+"sb_publishable_khKSlOrpjH8f44Z5Dls3mw_QfpSthr8"
 );
 
 // ACCESS CONTROL
 const user = JSON.parse(localStorage.getItem("user"));
-
 if(!user || (user.role !== "admin" && user.role !== "coadmin")){
   window.location="index.html";
 }
 
-// TABS
+// TAB SWITCH
 function openTab(name){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
@@ -183,16 +125,23 @@ function openTab(name){
   document.getElementById(name).classList.add("active");
 }
 
-// STATS
-async function loadStats(){
-  const users = await client.from("users").select("*");
-  const res = await client.from("resources").select("*");
-
-  userCount.innerText = users.data.length;
-  resCount.innerText = res.data.length;
+// SELECT ALL
+function toggleAll(source){
+  document.querySelectorAll(".userCheck").forEach(cb=>{
+    cb.checked = source.checked;
+  });
 }
 
-// USERS WITH COUNTS
+// GET SELECTED
+function getSelectedUsers(){
+  const users=[];
+  document.querySelectorAll(".userCheck:checked").forEach(cb=>{
+    users.push(cb.value);
+  });
+  return users;
+}
+
+// LOAD USERS
 async function loadUsers(){
 
   const { data } = await client.from("users").select("*");
@@ -203,173 +152,123 @@ async function loadUsers(){
   approvedList.innerHTML="";
   blockedList.innerHTML="";
 
-  let pending = 0, approved = 0, blocked = 0;
+  let p=0,a=0,b=0;
 
   data.forEach(u=>{
 
     if(!u.id_no.toLowerCase().includes(search)) return;
 
     const html = `
-      <div class="item">
-        <b>${u.id_no}</b> (${u.branch})<br>
-        Role: ${u.role}<br>
+    <div class="item">
+      <input type="checkbox" class="userCheck" value="${u.id_no}">
+      <b>${u.id_no}</b> (${u.branch})<br>
+      ${u.status}<br>
 
-        ${u.status === "pending" ? 
-          `<button onclick="approve('${u.id_no}')">Approve</button>` : ""}
+      ${u.status==="pending"?`<button onclick="approve('${u.id_no}')">Approve</button>`:""}
+      ${u.status!=="blocked"?`<button onclick="blockUser('${u.id_no}')">Block</button>`:""}
+      ${u.status==="blocked"?`<button onclick="unblockUser('${u.id_no}')">Unblock</button>`:""}
+    </div>`;
 
-        ${u.status !== "blocked" ? 
-          `<button onclick="blockUser('${u.id_no}')">Block</button>` : ""}
-
-        ${u.status === "blocked" ? 
-          `<button onclick="unblockUser('${u.id_no}')">Unblock</button>` : ""}
-
-        ${u.role !== "admin" ? 
-          `<button onclick="removeUser('${u.id_no}')">Delete</button>` : ""}
-      </div>
-    `;
-
-    if(u.status === "pending"){
-      pending++;
-      pendingList.innerHTML += html;
-    }
-    else if(u.status === "approved"){
-      approved++;
-      approvedList.innerHTML += html;
-    }
-    else if(u.status === "blocked"){
-      blocked++;
-      blockedList.innerHTML += html;
-    }
+    if(u.status==="pending"){p++;pendingList.innerHTML+=html;}
+    else if(u.status==="approved"){a++;approvedList.innerHTML+=html;}
+    else{b++;blockedList.innerHTML+=html;}
 
   });
 
-  pendingCount.innerText = `(${pending})`;
-  approvedCount.innerText = `(${approved})`;
-  blockedCount.innerText = `(${blocked})`;
+  pendingCount.innerText=`(${p})`;
+  approvedCount.innerText=`(${a})`;
+  blockedCount.innerText=`(${b})`;
 }
 
-// ACTIONS
+// SINGLE ACTIONS
 async function approve(id){
   await client.from("users").update({status:"approved"}).eq("id_no",id);
   loadUsers();
 }
-
 async function blockUser(id){
   await client.from("users").update({status:"blocked"}).eq("id_no",id);
   loadUsers();
 }
-
 async function unblockUser(id){
   await client.from("users").update({status:"approved"}).eq("id_no",id);
   loadUsers();
 }
 
-async function removeUser(id){
-  if(!confirm("Delete user permanently?")) return;
-  await client.from("users").delete().eq("id_no",id);
+// BULK ACTIONS
+async function approveSelected(){
+  const users=getSelectedUsers();
+  if(users.length===0)return alert("Select users");
+  await client.from("users").update({status:"approved"}).in("id_no",users);
+  loadUsers();
+}
+
+async function blockSelected(){
+  const users=getSelectedUsers();
+  if(users.length===0)return alert("Select users");
+  await client.from("users").update({status:"blocked"}).in("id_no",users);
+  loadUsers();
+}
+
+async function deleteSelected(){
+  const users=getSelectedUsers();
+  if(users.length===0)return alert("Select users");
+  if(!confirm("Delete selected users?"))return;
+  await client.from("users").delete().in("id_no",users);
   loadUsers();
 }
 
 // RESOURCE ADD
 async function add(){
 
-  if(!title.value){
-    alert("Enter title");
-    return;
-  }
+  if(!title.value) return alert("Enter title");
 
   let fileUrl = link.value;
 
-  const fileInput = document.getElementById("file");
+  const fileInput=document.getElementById("file");
 
-  if(fileInput.files.length > 0){
+  if(fileInput.files.length>0){
+    const file=fileInput.files[0];
+    const name=Date.now()+"_"+file.name;
 
-    const file = fileInput.files[0];
-    const fileName = Date.now() + "_" + file.name;
+    const {error}=await client.storage.from("files").upload(name,file);
 
-    const { error } = await client.storage.from("files").upload(fileName, file);
+    if(error)return alert("Upload failed");
 
-    if(error){
-      alert("Upload failed");
-      return;
-    }
-
-    const { data } = client.storage.from("files").getPublicUrl(fileName);
-    fileUrl = data.publicUrl;
+    const {data}=client.storage.from("files").getPublicUrl(name);
+    fileUrl=data.publicUrl;
   }
 
-  if(!fileUrl){
-    alert("Provide link or file");
-    return;
-  }
+  if(!fileUrl) return alert("Provide link or file");
 
-  await client.from("resources").insert([{
-    title: title.value,
-    link: fileUrl,
-    branch: branch.value
-  }]);
+  await client.from("resources").insert([{title:title.value,link:fileUrl,branch:branch.value}]);
 
-  title.value="";
-  link.value="";
-  fileInput.value="";
-
-  loadResources();
-}
-
-// DELETE RESOURCE
-async function del(id){
-  await client.from("resources").delete().eq("id",id);
+  title.value="";link.value="";fileInput.value="";
   loadResources();
 }
 
 // LOAD RESOURCES
 async function loadResources(){
 
-  const { data } = await client
-    .from("resources")
-    .select("*")
-    .order("created_at",{ascending:false});
+  const {data}=await client.from("resources").select("*");
 
-  const s = search.value.toLowerCase();
+  const s=search.value.toLowerCase();
 
   resList.innerHTML="";
 
   data.forEach(r=>{
     if(r.title.toLowerCase().includes(s)){
-      resList.innerHTML += `
-        <div class="item">
-          <b>${r.title}</b> (${r.branch})<br>
-          <a href="${r.link}" target="_blank">Open</a><br>
-          <button onclick="del('${r.id}')">Delete</button>
-        </div>
-      `;
-    }
-  });
-}
-
-// ACTIVE USERS
-async function loadActive(){
-
-  const now = new Date();
-  const { data } = await client.from("users").select("*");
-
-  activeList.innerHTML="";
-
-  data.forEach(u=>{
-    if(u.last_active){
-      const diff = (now - new Date(u.last_active))/1000;
-      if(diff < 10){
-        activeList.innerHTML += `<div class="item">${u.id_no} 🟢</div>`;
-      }
+      resList.innerHTML+=`
+      <div class="item">
+        ${r.title}<br>
+        <a href="${r.link}" target="_blank">Open</a>
+      </div>`;
     }
   });
 }
 
 // INIT
-loadStats();
 loadUsers();
 loadResources();
-setInterval(loadActive,5000);
 
 </script>
 
