@@ -1,48 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>KLU Resource Portal</title>
+<title>KL Study Hub</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-body {
-  background:#0B0F1A;
-  color:white;
+body{
+  margin:0;
   font-family:Arial;
-  text-align:center;
-  padding-top:80px;
+  background:linear-gradient(135deg,#0B0F1A,#111827);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
 }
 
-.card {
-  width:350px;
-  margin:auto;
-  padding:20px;
+/* CARD */
+.card{
+  width:360px;
+  padding:25px;
   background:rgba(255,255,255,0.05);
-  border-radius:10px;
+  border-radius:15px;
+  backdrop-filter:blur(15px);
+  box-shadow:0 0 25px rgba(0,255,255,0.1);
+  text-align:center;
 }
 
-input,select,button {
-  width:90%;
+/* TITLE */
+.title{
+  font-size:22px;
+  font-weight:bold;
+  margin-bottom:15px;
+}
+
+/* INPUTS */
+input,select{
+  width:100%;
   padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+  background:rgba(255,255,255,0.05);
+  color:white;
+}
+
+input:focus{
+  outline:none;
+  border:1px solid cyan;
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:10px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(45deg,cyan,#00ffaa);
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+/* LINKS */
+.link{
+  color:cyan;
+  cursor:pointer;
+  margin-top:10px;
+  display:block;
+}
+
+/* TERMS BOX */
+.terms{
+  height:150px;
+  overflow:auto;
+  font-size:12px;
+  text-align:left;
+  background:rgba(255,255,255,0.03);
+  padding:10px;
+  border-radius:8px;
   margin-top:10px;
 }
 
-.hidden {
-  display:none;
-}
-
-.terms {
-  height:120px;
-  overflow:auto;
-  font-size:12px;
-}
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
 <div class="card">
+
+<div class="title">
+KL <span style="color:cyan;">STUDY HUB</span>
+</div>
 
 <!-- LOGIN -->
 <div id="loginBox">
@@ -53,32 +108,41 @@ input,select,button {
 
 <button onclick="login()">Login</button>
 
-<p>
-<span onclick="openSignup()" style="color:cyan;cursor:pointer;">Signup</span>
-</p>
+<span class="link" onclick="openSignup()">Create Account</span>
 </div>
 
 <!-- TERMS -->
 <div id="signupBox" class="hidden">
-<h3>Terms & Privacy</h3>
+<h3>Terms & Conditions</h3>
 
 <div class="terms">
-Registration is restricted to valid KLU college IDs only (e.g., 25000XXXXX).<br><br>
-This platform is for educational use only.<br>
-Unauthorized users are not allowed.<br><br>
-For queries: yourgmail@gmail.com
+<b>KL Study Hub – Terms & Conditions</b><br><br>
+
+Only valid students with approved IDs are allowed.<br><br>
+
+Users must keep login credentials secure. Sharing credentials is discouraged. While we store data securely, misuse due to shared credentials is the user’s responsibility.<br><br>
+
+Do not upload harmful, illegal, or copyrighted content.<br><br>
+
+Admins can approve, reject, or remove users and resources.<br><br>
+
+Platform is provided “as is” for academic use.<br><br>
+
+By continuing, you agree to all terms.
 </div>
 
-<label>
-<input type="checkbox" id="agree"> I Agree
+<label style="display:block;margin-top:10px;">
+<input type="checkbox" id="agree"> I Agree to Terms
 </label>
 
 <button onclick="next()">Continue</button>
+
+<span class="link" onclick="backToLogin()">Back</span>
 </div>
 
 <!-- SIGNUP -->
 <div id="formBox" class="hidden">
-<h3>Signup</h3>
+<h3>Create Account</h3>
 
 <input id="sid" placeholder="Student ID">
 <input id="spass" type="password" placeholder="Password">
@@ -91,14 +155,15 @@ For queries: yourgmail@gmail.com
 <option>CSIT</option>
 </select>
 
-<button onclick="signup()">Create Account</button>
+<button onclick="signup()">Signup</button>
+
+<span class="link" onclick="backToLogin()">Back</span>
 </div>
 
 </div>
 
 <script>
 
-// 🔥 SUPABASE CONNECTION
 const { createClient } = supabase;
 
 const client = createClient(
@@ -108,53 +173,54 @@ const client = createClient(
 
 // OPEN SIGNUP
 function openSignup(){
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("signupBox").classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  signupBox.classList.remove("hidden");
 }
 
-// TERMS CHECK
+// BACK
+function backToLogin(){
+  signupBox.classList.add("hidden");
+  formBox.classList.add("hidden");
+  loginBox.classList.remove("hidden");
+}
+
+// NEXT
 function next(){
-  if(!document.getElementById("agree").checked){
-    alert("You must agree first");
+  if(!agree.checked){
+    alert("Please agree to terms");
     return;
   }
-  document.getElementById("signupBox").classList.add("hidden");
-  document.getElementById("formBox").classList.remove("hidden");
+  signupBox.classList.add("hidden");
+  formBox.classList.remove("hidden");
 }
 
 // SIGNUP
 async function signup(){
 
-  console.log("Signup clicked");
-
   await client.from("users").insert([{
-    id_no: document.getElementById("sid").value,
-    password: document.getElementById("spass").value,
-    branch: document.getElementById("branch").value,
-    status: "pending",
-    role: "user"
+    id_no: sid.value,
+    password: spass.value,
+    branch: branch.value,
+    role: "user",
+    status: "pending"
   }]);
 
-  alert("Signup done. Wait for admin approval");
+  alert("Request sent. Wait for approval.");
   location.reload();
 }
 
 // LOGIN
 async function login(){
 
-  console.log("Login clicked");
-
-  const { data, error } = await client
+  const { data } = await client
     .from("users")
     .select("*")
-    .eq("id_no", document.getElementById("id").value)
-    .eq("password", document.getElementById("pass").value)
+    .eq("id_no", id.value)
+    .eq("password", pass.value)
     .single();
 
-  console.log(data, error);
-
   if(!data){
-    alert("Invalid login");
+    alert("Invalid credentials");
     return;
   }
 
