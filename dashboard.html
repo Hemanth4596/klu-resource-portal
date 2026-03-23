@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>KLU Dashboard</title>
+<title>KL Study Hub</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -11,94 +11,76 @@ body{
   font-family:Arial;
   background:#0B0F1A;
   color:white;
-  overflow:hidden;
-}
-
-/* BACKGROUND */
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:-1;
 }
 
 /* NAV */
 .nav{
   display:flex;
   justify-content:space-between;
-  padding:15px 30px;
+  padding:15px 25px;
   background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(12px);
 }
 
-.logo{font-weight:bold;}
-.logout{color:#ff4d4d;cursor:pointer;}
+.logo{
+  font-weight:bold;
+  font-size:18px;
+}
+
+.logout{
+  color:#ff4d4d;
+  cursor:pointer;
+}
 
 /* HERO */
 .hero{
   text-align:center;
-  margin-top:30px;
+  margin-top:20px;
 }
 
-.hero h1{
-  animation:glow 2s infinite alternate;
+/* SEARCH */
+.searchBox{
+  text-align:center;
+  margin:20px;
 }
 
-@keyframes glow{
-  from{ text-shadow:0 0 10px cyan;}
-  to{ text-shadow:0 0 30px cyan;}
+input,select{
+  padding:10px;
+  margin:5px;
+  border-radius:6px;
+  border:none;
 }
 
 /* GRID */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:25px;
-  padding:30px;
+  gap:20px;
+  padding:20px;
 }
 
 /* CARD */
 .card{
   background:rgba(255,255,255,0.05);
-  border-radius:15px;
   padding:20px;
+  border-radius:10px;
   cursor:pointer;
-  transition:0.4s;
-  position:relative;
-  overflow:hidden;
+  transition:0.3s;
 }
 
 .card:hover{
-  transform:translateY(-10px) scale(1.05);
-  box-shadow:0 0 30px rgba(0,255,255,0.3);
+  transform:translateY(-5px);
+  box-shadow:0 0 15px cyan;
 }
 
 .card.active{
   border:1px solid cyan;
 }
 
-/* GLOW EFFECT */
-.card::before{
-  content:"";
-  position:absolute;
-  width:200%;
-  height:200%;
-  background:linear-gradient(45deg,transparent,cyan,transparent);
-  top:-50%;
-  left:-50%;
-  opacity:0;
-  transition:0.5s;
-}
-
-.card:hover::before{
-  opacity:0.2;
-}
-
 /* RESOURCES */
 .resources{
   max-height:0;
   overflow:hidden;
-  transition:0.4s;
+  transition:0.3s;
 }
 
 .resources.show{
@@ -106,53 +88,61 @@ canvas{
   margin-top:10px;
 }
 
-.resources a{
-  display:block;
-  color:cyan;
-  margin-top:6px;
-  text-decoration:none;
+.item{
+  margin-top:8px;
 }
 
-.resources a:hover{
-  text-decoration:underline;
+button{
+  margin-left:5px;
+  padding:4px 8px;
+  cursor:pointer;
 }
 
-/* LOADER */
-.loader{
-  text-align:center;
-  margin-top:40px;
-  animation:pulse 1s infinite;
+/* SECTIONS */
+.section{
+  padding:15px;
 }
 
-@keyframes pulse{
-  0%{opacity:0.3}
-  50%{opacity:1}
-  100%{opacity:0.3}
-}
 </style>
 </head>
 
 <body>
 
-<canvas id="bg"></canvas>
-
 <div class="nav">
-  <div class="logo">KLU Resources</div>
+  <div class="logo">
+    KL <span style="color:cyan;">STUDY HUB</span>
+  </div>
   <div class="logout" onclick="logout()">Logout</div>
 </div>
 
 <div class="hero">
-  <h1 id="welcome"></h1>
-  <p>Access your branch resources</p>
+  <h2 id="welcome"></h2>
 </div>
 
-<div id="loader" class="loader">Loading...</div>
+<div class="searchBox">
+  <input id="search" placeholder="Search..." oninput="render()">
+  
+  <select id="filter" onchange="render()">
+    <option value="all">All</option>
+    <option value="pdf">PDF</option>
+    <option value="link">Links</option>
+  </select>
+</div>
 
-<div id="grid" class="grid" style="display:none;"></div>
+<div class="section">
+  <h3>⭐ Favorites</h3>
+  <div id="favorites"></div>
+</div>
+
+<div class="section">
+  <h3>👁 Recently Viewed</h3>
+  <div id="recent"></div>
+</div>
+
+<div class="grid" id="grid"></div>
 
 <script>
 
-// SUPABASE
 const { createClient } = supabase;
 
 const client = createClient(
@@ -167,96 +157,137 @@ if(!user){
 }
 
 document.getElementById("welcome").innerText =
-  "Welcome " + user.id_no;
+  "Welcome " + user.id_no + " (" + user.branch + ")";
 
-// PARTICLES
-const canvas = document.getElementById("bg");
-const ctx = canvas.getContext("2d");
+let allData = [];
+let favorites = JSON.parse(localStorage.getItem("fav") || "[]");
+let recent = JSON.parse(localStorage.getItem("recent") || "[]");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let particles = [];
-
-for(let i=0;i<60;i++){
-  particles.push({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    r:Math.random()*2,
-    dx:Math.random()-0.5,
-    dy:Math.random()-0.5
-  });
-}
-
-function animate(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  particles.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle="cyan";
-    ctx.fill();
-
-    p.x+=p.dx;
-    p.y+=p.dy;
-
-    if(p.x<0||p.x>canvas.width) p.dx*=-1;
-    if(p.y<0||p.y>canvas.height) p.dy*=-1;
-  });
-
-  requestAnimationFrame(animate);
-}
-animate();
-
-// GRID
 const branches = ["CSE","ECE","EEE","AIDS","CSIT"];
-const grid = document.getElementById("grid");
 
-branches.forEach(b=>{
-  const card = document.createElement("div");
-  card.className="card";
-
-  card.innerHTML = `
-    <h3>${b}</h3>
-    <div class="resources" id="${b}"></div>
-  `;
-
-  card.onclick = function(){
-
-    document.querySelectorAll(".card").forEach(c=>{
-      c.classList.remove("active");
-      c.querySelector(".resources").classList.remove("show");
-    });
-
-    card.classList.add("active");
-    card.querySelector(".resources").classList.toggle("show");
-  };
-
-  grid.appendChild(card);
-});
-
-// LOAD DATA
 async function load(){
   const { data } = await client.from("resources").select("*");
-
-  data.forEach(item=>{
-    const el = document.getElementById(item.branch);
-    if(el){
-      el.innerHTML += `<a href="${item.link}" target="_blank">${item.title}</a>`;
-    }
-  });
-
-  document.getElementById("loader").style.display="none";
-  grid.style.display="grid";
+  allData = data;
+  render();
 }
 
-load();
+function render(){
+
+  const search = document.getElementById("search").value.toLowerCase();
+  const filter = document.getElementById("filter").value;
+
+  const grid = document.getElementById("grid");
+  grid.innerHTML="";
+
+  branches.forEach(b=>{
+
+    const branchData = allData.filter(r=>{
+      return r.branch === b &&
+      r.title.toLowerCase().includes(search) &&
+      (filter==="all" ||
+       (filter==="pdf" && r.link.includes(".pdf")) ||
+       (filter==="link" && !r.link.includes(".pdf")));
+    });
+
+    const card = document.createElement("div");
+    card.className="card";
+
+    card.innerHTML = `
+      <h3>${b} (${branchData.length})</h3>
+      <div class="resources"></div>
+    `;
+
+    const resBox = card.querySelector(".resources");
+
+    if(branchData.length === 0){
+      resBox.innerHTML = "<div>No resources</div>";
+    } else {
+      branchData.forEach(r=>{
+        resBox.innerHTML += `
+          <div class="item">
+            ${getIcon(r.link)} ${r.title}
+            <button onclick="openRes('${r.link}')">Open</button>
+            <button onclick="copyLink('${r.link}')">Copy</button>
+            <button onclick="fav('${r.link}','${r.title}')">⭐</button>
+          </div>
+        `;
+      });
+    }
+
+    card.onclick = ()=>{
+      document.querySelectorAll(".card").forEach(c=>{
+        c.classList.remove("active");
+        c.querySelector(".resources").classList.remove("show");
+      });
+
+      card.classList.add("active");
+      resBox.classList.toggle("show");
+    };
+
+    grid.appendChild(card);
+
+  });
+
+  renderFav();
+  renderRecent();
+}
+
+// ICON
+function getIcon(link){
+  if(link.includes(".pdf")) return "📄";
+  return "🔗";
+}
+
+// OPEN
+function openRes(link){
+  window.open(link, "_blank");
+
+  recent.unshift(link);
+  recent = [...new Set(recent)].slice(0,5);
+  localStorage.setItem("recent", JSON.stringify(recent));
+  renderRecent();
+}
+
+// COPY
+function copyLink(link){
+  navigator.clipboard.writeText(link);
+  alert("Copied");
+}
+
+// FAVORITE
+function fav(link,title){
+  favorites.push({link,title});
+  localStorage.setItem("fav", JSON.stringify(favorites));
+  renderFav();
+}
+
+// RENDER FAVORITES
+function renderFav(){
+  const box = document.getElementById("favorites");
+  box.innerHTML="";
+
+  favorites.forEach(f=>{
+    box.innerHTML += `<div>${f.title}</div>`;
+  });
+}
+
+// RENDER RECENT
+function renderRecent(){
+  const box = document.getElementById("recent");
+  box.innerHTML="";
+
+  recent.forEach(r=>{
+    box.innerHTML += `<div>${r}</div>`;
+  });
+}
 
 // LOGOUT
 function logout(){
   localStorage.removeItem("user");
   window.location="index.html";
 }
+
+load();
 
 </script>
 
