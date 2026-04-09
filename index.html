@@ -318,7 +318,7 @@ select option { background: #0d1117; color: var(--text); }
   <!-- FOOTER -->
   <div class="page-footer">
     <div class="footer-links">
-      klstudyhubinfo@gmail.com
+      <a href="mailto:klstudyhubinfo@gmail.com" class="footer-link email" target="_blank"><span class="fl-icon">📧</span><span>klstudyhubinfo@gmail.com</span></a>
       <a href="https://www.instagram.com/hemanth_paladugula" class="footer-link insta" target="_blank">
         <span class="fl-icon">📸</span>
         <span>@hemanth_paladugula</span>
@@ -509,13 +509,8 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const active = document.querySelector('.panel.active');
   if (!active) return;
-  if (active.id === 'loginBox') {
-    const btn = active.querySelector('.btn-primary');
-    login(btn);
-  } else if (active.id === 'formBox') {
-    const btn = active.querySelector('.btn-primary');
-    signup(btn);
-  }
+  if (active.id === 'loginBox') { login(active.querySelector('.btn-primary')); }
+  else if (active.id === 'formBox') { signup(active.querySelector('.btn-primary')); }
 });
 </script>
 </body>
