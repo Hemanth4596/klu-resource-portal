@@ -605,7 +605,7 @@ async function loadData(){
     toast("Failed to load data. Check connection.","e");
   }
 }
-  loadData();
+ 
 
 function isPdf(l){return l&&l.toLowerCase().includes(".pdf");}
 function updateStats(){
@@ -614,6 +614,7 @@ function updateStats(){
   document.getElementById("stRec").textContent=recents.length;
   document.getElementById("favCnt").textContent=favs.length;
   document.getElementById("recCnt").textContent=recents.length;
+  loadData();
 }
 
 // ANNOUNCEMENTS
