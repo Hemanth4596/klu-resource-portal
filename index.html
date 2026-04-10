@@ -172,6 +172,15 @@ select option { background: #0d1117; color: var(--text); }
 @keyframes barShrink { from{transform:scaleX(1)} to{transform:scaleX(0)} }
 
 @media(max-width:440px) { .card{padding:24px 18px;} .logo-title{font-size:30px;} .field-row{grid-template-columns:1fr;} }
+
+/* WHATSAPP CTA */
+.wa-cta { margin-top: 20px; width: 100%; background: linear-gradient(135deg, rgba(37,211,102,0.08) 0%, rgba(0,245,196,0.05) 100%); border: 1px solid rgba(37,211,102,0.2); border-radius: 16px; padding: 24px 20px; text-align: center; }
+.wa-title { font-family: "Syne", sans-serif; font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+.wa-sub { font-size: 13px; color: rgba(221,230,240,0.7); line-height: 1.75; margin-bottom: 18px; }
+.wa-btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 28px; background: linear-gradient(135deg, #25d366, #1da851); border-radius: 50px; text-decoration: none; color: #fff; font-family: "Syne", sans-serif; font-size: 14px; font-weight: 700; box-shadow: 0 4px 20px rgba(37,211,102,0.35); transition: all 0.25s; }
+.wa-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,211,102,0.5); }
+.wa-icon { font-size: 18px; }
+.wa-note { margin-top: 12px; font-size: 11.5px; color: rgba(221,230,240,0.4); }
 </style>
 </head>
 <body>
@@ -313,6 +322,19 @@ select option { background: #0d1117; color: var(--text); }
       Our goal is to simplify learning, save time, and support students in achieving better results through shared resources.<br><br>
       <span class="highlight">Built by students, for students.</span>
     </div>
+  </div>
+
+  <!-- WHATSAPP CTA -->
+  <div class="wa-cta">
+    <div class="wa-text">
+      <div class="wa-title">🎓 You don't have to study alone.</div>
+      <div class="wa-sub">Hundreds of KL students are already sharing notes, solving doubts, and lifting each other up — every single day. Join your people. Be part of something real.</div>
+    </div>
+    <a href="https://chat.whatsapp.com/LWNBaMmNNuSH08ztjFg39B" class="wa-btn" target="_blank">
+      <span class="wa-icon">💬</span>
+      <span>Join our WhatsApp Community</span>
+    </a>
+    <div class="wa-note">Free · Students only · No spam, just support 🤝</div>
   </div>
 
   <!-- FOOTER -->
@@ -505,12 +527,12 @@ async function signup(btn) {
 }
 
 // ── ENTER KEY ──
-document.addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  const active = document.querySelector('.panel.active');
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const active = document.querySelector(".panel.active");
   if (!active) return;
-  if (active.id === 'loginBox') { login(active.querySelector('.btn-primary')); }
-  else if (active.id === 'formBox') { signup(active.querySelector('.btn-primary')); }
+  if (active.id === "loginBox") { login(active.querySelector(".btn-primary")); }
+  else if (active.id === "formBox") { signup(active.querySelector(".btn-primary")); }
 });
 </script>
 </body>
