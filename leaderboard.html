@@ -257,7 +257,7 @@ footer{text-align:center;padding:20px;border-top:1px solid var(--border);font-si
 
 <footer>
   <div class="footer-links">
-    <a href="mailto:klstudyhubinfo@gmail.com" class="footer-link email" target="_blank"><span class="fl-icon">📧</span><span>klstudyhubinfo@gmail.com</span></a>
+    klstudyhubinfo@gmail.com
     <a href="https://www.instagram.com/hemanth_paladugula" class="footer-link insta" target="_blank"><span>📸</span> @hemanth_paladugula</a>
     <a href="https://www.instagram.com/praveen_retotal_13" class="footer-link insta" target="_blank"><span>📸</span> @praveen_retotal_13</a>
   </div>
@@ -391,7 +391,6 @@ function renderTable(filtered){
   const body=document.getElementById("lbTableBody");
   if(!filtered.length){body.innerHTML=`<div class="empty"><div class="ei">📭</div>No students found for this filter.</div>`;return;}
 
-  // Show from rank 4 onwards in table (top 3 in podium)
   const tableRows=filtered.slice(0);
 
   body.innerHTML=tableRows.map((s,i)=>{
@@ -427,7 +426,8 @@ function renderTable(filtered){
 }
 
 // ── INIT ──
-loadLeaderboard();
+async function loadLeaderboard(){ return load(); }
+load();
 </script>
 </body>
 </html>
